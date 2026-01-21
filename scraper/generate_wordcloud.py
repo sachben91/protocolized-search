@@ -8,28 +8,98 @@ import re
 from collections import Counter
 from typing import List, Dict
 
-# Common stop words to exclude
+# Comprehensive stop words to exclude - focus on keeping nouns and meaningful content words
 STOP_WORDS = {
-    'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i',
-    'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
-    'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she',
-    'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their',
-    'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go',
-    'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know',
-    'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them',
-    'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over',
-    'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first',
-    'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day',
-    'most', 'us', 'is', 'was', 'are', 'been', 'has', 'had', 'were', 'said', 'did',
-    'having', 'may', 'should', 'am', 'being', 'does', 'did', 'done', 'having',
-    'more', 'very', 'much', 'such', 'too', 'own', 'same', 'here', 'where', 'why',
-    'how', 'each', 'every', 'both', 'few', 'many', 'through', 'during', 'before',
-    'above', 'between', 'under', 'again', 'further', 'once', 'here', 'there',
-    'while', 'those', 'ever', 'never', 'always', 'often', 'sometimes', 'still',
-    'yet', 'already', 'since', 'until', 'however', 'although', 'though', 'unless',
-    'whether', 'while', 'upon', 'might', 'must', 'shall', 'ought', 'used', 'made',
-    'quite', 'rather', 'really', 'actually', 'perhaps', 'maybe', 'probably',
-    'going', 'got', 'getting', 'goes', 'went', 'gone', 'let', 'thing', 'things'
+    # Articles, conjunctions, prepositions
+    'the', 'a', 'an', 'and', 'or', 'but', 'if', 'as', 'at', 'by', 'for', 'from',
+    'in', 'into', 'of', 'on', 'onto', 'to', 'with', 'about', 'above', 'across',
+    'after', 'against', 'along', 'among', 'around', 'before', 'behind', 'below',
+    'beneath', 'beside', 'between', 'beyond', 'during', 'except', 'inside', 'near',
+    'off', 'outside', 'over', 'through', 'throughout', 'under', 'until', 'up', 'upon',
+    'within', 'without', 'toward', 'towards',
+
+    # Pronouns
+    'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+    'my', 'your', 'his', 'her', 'its', 'our', 'their', 'mine', 'yours', 'hers', 'ours',
+    'theirs', 'myself', 'yourself', 'himself', 'herself', 'itself', 'ourselves',
+    'themselves', 'this', 'that', 'these', 'those', 'who', 'whom', 'whose', 'which',
+    'what', 'whatever', 'whoever', 'whomever',
+
+    # Common verbs (to focus on nouns)
+    'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+    'having', 'do', 'does', 'did', 'doing', 'done', 'will', 'would', 'shall', 'should',
+    'may', 'might', 'must', 'can', 'could', 'ought', 'need', 'dare',
+    'go', 'goes', 'going', 'went', 'gone', 'get', 'gets', 'getting', 'got', 'gotten',
+    'make', 'makes', 'making', 'made', 'take', 'takes', 'taking', 'took', 'taken',
+    'come', 'comes', 'coming', 'came', 'see', 'sees', 'seeing', 'saw', 'seen',
+    'know', 'knows', 'knowing', 'knew', 'known', 'think', 'thinks', 'thinking', 'thought',
+    'look', 'looks', 'looking', 'looked', 'give', 'gives', 'giving', 'gave', 'given',
+    'use', 'uses', 'using', 'used', 'find', 'finds', 'finding', 'found',
+    'tell', 'tells', 'telling', 'told', 'ask', 'asks', 'asking', 'asked',
+    'work', 'works', 'working', 'worked', 'seem', 'seems', 'seeming', 'seemed',
+    'feel', 'feels', 'feeling', 'felt', 'try', 'tries', 'trying', 'tried',
+    'leave', 'leaves', 'leaving', 'left', 'call', 'calls', 'calling', 'called',
+    'keep', 'keeps', 'keeping', 'kept', 'let', 'lets', 'letting',
+    'begin', 'begins', 'beginning', 'began', 'begun', 'help', 'helps', 'helping', 'helped',
+    'show', 'shows', 'showing', 'showed', 'shown', 'hear', 'hears', 'hearing', 'heard',
+    'play', 'plays', 'playing', 'played', 'run', 'runs', 'running', 'ran',
+    'move', 'moves', 'moving', 'moved', 'live', 'lives', 'living', 'lived',
+    'believe', 'believes', 'believing', 'believed', 'bring', 'brings', 'bringing', 'brought',
+    'happen', 'happens', 'happening', 'happened', 'write', 'writes', 'writing', 'wrote', 'written',
+    'sit', 'sits', 'sitting', 'sat', 'stand', 'stands', 'standing', 'stood',
+    'lose', 'loses', 'losing', 'lost', 'pay', 'pays', 'paying', 'paid',
+    'meet', 'meets', 'meeting', 'met', 'include', 'includes', 'including', 'included',
+    'continue', 'continues', 'continuing', 'continued', 'set', 'sets', 'setting',
+    'learn', 'learns', 'learning', 'learned', 'change', 'changes', 'changing', 'changed',
+    'lead', 'leads', 'leading', 'led', 'understand', 'understands', 'understanding', 'understood',
+    'watch', 'watches', 'watching', 'watched', 'follow', 'follows', 'following', 'followed',
+    'stop', 'stops', 'stopping', 'stopped', 'create', 'creates', 'creating', 'created',
+    'speak', 'speaks', 'speaking', 'spoke', 'spoken', 'read', 'reads', 'reading',
+    'spend', 'spends', 'spending', 'spent', 'grow', 'grows', 'growing', 'grew', 'grown',
+    'open', 'opens', 'opening', 'opened', 'walk', 'walks', 'walking', 'walked',
+    'win', 'wins', 'winning', 'won', 'offer', 'offers', 'offering', 'offered',
+    'remember', 'remembers', 'remembering', 'remembered', 'consider', 'considers', 'considering', 'considered',
+    'appear', 'appears', 'appearing', 'appeared', 'buy', 'buys', 'buying', 'bought',
+    'serve', 'serves', 'serving', 'served', 'die', 'dies', 'dying', 'died',
+    'send', 'sends', 'sending', 'sent', 'expect', 'expects', 'expecting', 'expected',
+    'build', 'builds', 'building', 'built', 'stay', 'stays', 'staying', 'stayed',
+    'fall', 'falls', 'falling', 'fell', 'fallen', 'cut', 'cuts', 'cutting',
+    'reach', 'reaches', 'reaching', 'reached', 'kill', 'kills', 'killing', 'killed',
+    'remain', 'remains', 'remaining', 'remained', 'suggest', 'suggests', 'suggesting', 'suggested',
+    'raise', 'raises', 'raising', 'raised', 'pass', 'passes', 'passing', 'passed',
+
+    # Adverbs and qualifiers
+    'not', 'no', 'yes', 'just', 'only', 'also', 'very', 'too', 'so', 'much', 'many',
+    'more', 'most', 'less', 'least', 'few', 'some', 'any', 'all', 'both', 'each',
+    'every', 'either', 'neither', 'such', 'own', 'same', 'other', 'another',
+    'well', 'even', 'still', 'yet', 'however', 'though', 'although', 'never', 'always',
+    'often', 'sometimes', 'usually', 'already', 'quite', 'rather', 'really', 'actually',
+    'perhaps', 'maybe', 'probably', 'possibly', 'certainly', 'surely',
+    'like', 'how', 'why', 'than', 'while', 'because', 'since', 'unless', 'whether',
+
+    # Common time/place words
+    'now', 'then', 'when', 'where', 'here', 'there', 'today', 'tomorrow', 'yesterday',
+    'once', 'again', 'back', 'away', 'out', 'down', 'next', 'last', 'first', 'second',
+    'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+
+    # Contractions and informal
+    'don', 'doesn', 'didn', 'wasn', 'weren', 'haven', 'hasn', 'hadn', 'won', 'wouldn',
+    'can', 'couldn', 'shouldn', 'isn', 'aren', 'ain', 've', 'll', 're',
+
+    # Generic words
+    'something', 'anything', 'nothing', 'everything', 'someone', 'anyone', 'everyone',
+    'somewhere', 'anywhere', 'everywhere', 'thing', 'things', 'way', 'ways',
+    'time', 'times', 'day', 'days', 'year', 'years', 'part', 'parts',
+    'place', 'places', 'case', 'cases', 'point', 'points', 'fact', 'facts',
+    'lot', 'lots', 'bit', 'bits', 'kind', 'kinds', 'sort', 'sorts', 'type', 'types',
+
+    # Misc common words
+    'good', 'bad', 'new', 'old', 'great', 'big', 'small', 'little', 'long', 'short',
+    'high', 'low', 'right', 'left', 'sure', 'okay', 'fine', 'nice', 'pretty',
+    'people', 'person', 'man', 'woman', 'child', 'number', 'way', 'end', 'side',
+    'want', 'wants', 'wanted', 'wanting', 'need', 'needs', 'needed', 'needing',
+    'say', 'says', 'saying', 'said', 'mean', 'means', 'meaning', 'meant',
+    'become', 'becomes', 'becoming', 'became', 'add', 'adds', 'adding', 'added'
 }
 
 
