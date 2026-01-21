@@ -90,6 +90,9 @@ async function initSearch() {
         searchInput.addEventListener('input', handleSearchInput);
         searchInput.addEventListener('keydown', handleKeyboard);
 
+        // Load and display word cloud
+        loadWordCloud();
+
     } catch (error) {
         console.error('Failed to initialize search:', error);
         loadingDiv.classList.add('hidden');
@@ -354,6 +357,80 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+/**
+ * Load and display word cloud
+ */
+async function loadWordCloud() {
+    try {
+        const response = await fetch('wordcloud-data.json');
+        if (!response.ok) {
+            console.warn('Word cloud data not available');
+            return;
+        }
+
+        const wordData = await response.json();
+        displayWordCloud(wordData);
+
+    } catch (error) {
+        console.warn('Failed to load word cloud:', error);
+    }
+}
+
+/**
+ * Display word cloud with clickable words
+ */
+function displayWordCloud(wordData) {
+    const container = document.getElementById('word-cloud-words');
+    if (!container) return;
+
+    // Color palette for words
+    const colors = [
+        'text-blue-600',
+        'text-purple-600',
+        'text-indigo-600',
+        'text-pink-600',
+        'text-cyan-600'
+    ];
+
+    // Create word elements
+    const wordElements = wordData.map((item, index) => {
+        // Font size based on item.size (1-5)
+        const sizeClasses = {
+            5: 'text-3xl font-bold',
+            4: 'text-2xl font-semibold',
+            3: 'text-xl font-medium',
+            2: 'text-lg',
+            1: 'text-base'
+        };
+
+        const sizeKey = Math.round(item.size);
+        const sizeClass = sizeClasses[sizeKey] || 'text-base';
+        const colorClass = colors[index % colors.length];
+
+        return `
+            <button
+                class="word-cloud-item ${sizeClass} ${colorClass} hover:underline hover:scale-110 transition-transform cursor-pointer"
+                data-word="${escapeHtml(item.word)}"
+                title="${item.count} occurrences"
+            >
+                ${escapeHtml(item.word)}
+            </button>
+        `;
+    });
+
+    container.innerHTML = wordElements.join('');
+
+    // Add click handlers
+    container.querySelectorAll('.word-cloud-item').forEach(button => {
+        button.addEventListener('click', function() {
+            const word = this.getAttribute('data-word');
+            searchInput.value = word;
+            performSearch(word);
+            searchInput.focus();
+        });
+    });
 }
 
 // Initialize on page load
